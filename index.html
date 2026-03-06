@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a2e">
+<title>Middagsplanlegger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --surface: #1a1a2e;
+    --surface2: #16213e;
+    --accent: #e8c547;
+    --accent2: #ff6b6b;
+    --text: #f0ead6;
+    --text-dim: #8a8a9a;
+    --border: rgba(232,197,71,0.15);
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 0 100px; }
+
+  /* HEADER */
+  .header {
+    padding: 48px 24px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: '🍽';
+    position: absolute;
+    right: -10px;
+    top: 10px;
+    font-size: 120px;
+    opacity: 0.06;
+    transform: rotate(-15deg);
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    line-height: 1.1;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  .header p {
+    margin-top: 8px;
+    color: var(--text-dim);
+    font-size: 14px;
+    font-weight: 300;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    padding: 0 24px 24px;
+  }
+  .tab {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-dim);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .tab.active {
+    background: var(--accent);
+    color: #0f0f1a;
+    border-color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* PANELS */
+  .panel { display: none; padding: 0 24px; }
+  .panel.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  /* CRITERIA FORM */
+  .criteria-grid {
+    display: grid;
+    gap: 14px;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+  }
+  select, input[type="number"], textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  select:focus, input:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+  textarea { resize: none; height: 80px; }
+
+  .chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg);
+    color: var(--text-dim);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chip.selected {
+    background: rgba(232,197,71,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* BUTTONS */
+  .btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #0f0f1a;
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  /* LOADING */
+  .loading {
+    text-align: center;
+    padding: 40px;
+    display: none;
+  }
+  .loading.show { display: block; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading p { color: var(--text-dim); font-size: 14px; }
+
+  /* DAY MEAL CARD */
+  .day-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    overflow: hidden;
+    animation: fadeUp 0.4s ease forwards;
+    opacity: 0;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .day-card:nth-child(1) { animation-delay: 0.05s; }
+  .day-card:nth-child(2) { animation-delay: 0.1s; }
+  .day-card:nth-child(3) { animation-delay: 0.15s; }
+  .day-card:nth-child(4) { animation-delay: 0.2s; }
+  .day-card:nth-child(5) { animation-delay: 0.25s; }
+  .day-card:nth-child(6) { animation-delay: 0.3s; }
+  .day-card:nth-child(7) { animation-delay: 0.35s; }
+
+  .day-header {
+    padding: 14px 18px;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .day-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    color: var(--accent);
+  }
+  .day-tag {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: rgba(232,197,71,0.1);
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .day-body { padding: 16px 18px; }
+  .meal-name {
+    font-size: 17px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .meal-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  .meal-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .meal-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* SHOPPING LIST */
+  .shop-category {
+    margin-bottom: 20px;
+  }
+  .shop-cat-title {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .shop-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .shop-item:last-child { border-bottom: none; }
+  .shop-check {
+    width: 22px; height: 22px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .shop-item.checked .shop-check {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .shop-item.checked .shop-check::after {
+    content: '✓';
+    font-size: 13px;
+    color: #0f0f1a;
+    font-weight: 700;
+  }
+  .shop-item.checked .shop-item-text {
+    text-decoration: line-through;
+    color: var(--text-dim);
+  }
+  .shop-item-text { font-size: 14px; flex: 1; }
+  .shop-item-amount {
+    font-size: 13px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  /* EMPTY STATE */
+  .empty {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--text-dim);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .empty p { font-size: 14px; line-height: 1.6; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(15,15,26,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+    max-width: 480px;
+    margin: 0 auto;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+  }
+  .nav-item {
+    flex: 1;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    border: none;
+    background: none;
+    color: var(--text-dim);
+  }
+  .nav-item.active { color: var(--accent); }
+  .nav-icon { font-size: 22px; }
+  .nav-label { font-size: 11px; margin-top: 3px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--accent);
+    color: #0f0f1a;
+    padding: 12px 24px;
+    border-radius: 99px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 200;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .error-msg {
+    background: rgba(255,107,107,0.1);
+    border: 1px solid rgba(255,107,107,0.3);
+    color: #ff6b6b;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-top: 12px;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <h1>Middag&shy;planlegger</h1>
+    <p>AI-genererte middagsforslag tilpasset deg</p>
+  </div>
+
+  <!-- PANEL: KRITERIER -->
+  <div class="panel active" id="panel-criteria">
+    <div class="card">
+      <div class="card-title">Dine preferanser</div>
+      <div class="criteria-grid">
+
+        <div>
+          <label>Antall personer</label>
+          <input type="number" id="persons" value="4" min="1" max="20">
+        </div>
+
+        <div>
+          <label>Matpreferanser</label>
+          <div class="chip-group" id="cuisine-chips">
+            <div class="chip selected" data-val="norsk">🇳🇴 Norsk</div>
+            <div class="chip" data-val="italiensk">🇮🇹 Italiensk</div>
+            <div class="chip" data-val="asiatisk">🥢 Asiatisk</div>
+            <div class="chip" data-val="meksikansk">🌮 Meksikansk</div>
+            <div class="chip" data-val="middelhavsmat">🫒 Middelhavsmat</div>
+            <div class="chip" data-val="indisk">🍛 Indisk</div>
+          </div>
+        </div>
+
+        <div>
+          <label>Diett / allergier</label>
+          <div class="chip-group" id="diet-chips">
+            <div class="chip" data-val="vegetar">🥦 Vegetar</div>
+            <div class="chip" data-val="vegansk">🌱 Vegansk</div>
+            <div class="chip" data-val="glutenfritt">🌾 Glutenfritt</div>
+            <div class="chip" data-val="laktosefritt">🥛 Laktosefritt</div>
+            <div class="chip" data-val="lavkarbo">📉 Lavkarbo</div>
+          </div>
+        </div>
+
+        <div>
+          <label>Tidsbruk per middag</label>
+          <select id="time">
+            <option value="under 30 min">⚡ Under 30 min</option>
+            <option value="30-60 min" selected>⏱ 30–60 min</option>
+            <option value="over 60 min">🍲 Over 60 min (helgemat)</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Budsjett</label>
+          <select id="budget">
+            <option value="lavt budsjett">💰 Lavt – spar mest mulig</option>
+            <option value="middels budsjett" selected>💰💰 Middels – balansert</option>
+            <option value="høyt budsjett">💰💰💰 Høyt – ingen begrensning</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Vanskelighetsgrad</label>
+          <select id="difficulty">
+            <option value="enkel">👨‍🍳 Enkel – nybegynner</option>
+            <option value="middels" selected>👨‍🍳👨‍🍳 Middels</option>
+            <option value="avansert">👨‍🍳👨‍🍳👨‍🍳 Avansert – kokkestil</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Ekstra ønsker (valgfritt)</label>
+          <textarea id="extra" placeholder="F.eks: ingen skalldyr, gjerne supper om vinteren, barna liker pasta…"></textarea>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="generateMeals()">✨ Generer ukemeny</button>
+      <div class="error-msg" id="error-msg">Noe gikk galt. Sjekk at du har limt inn en gyldig API-nøkkel i innstillinger, og prøv igjen.</div>
+    </div>
+  </div>
+
+  <!-- PANEL: UKEPLAN -->
+  <div class="panel" id="panel-week">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Lager ukemeny med handleliste…</p>
+    </div>
+    <div id="week-content">
+      <div class="empty">
+        <div class="empty-icon">🍽</div>
+        <h3>Ingen meny ennå</h3>
+        <p>Fyll inn dine preferanser og trykk «Generer ukemeny»</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: HANDLELISTE -->
+  <div class="panel" id="panel-shop">
+    <div id="shop-content">
+      <div class="empty">
+        <div class="empty-icon">🛒</div>
+        <h3>Ingen handleliste ennå</h3>
+        <p>Generer en ukemeny først, så lager jeg handlelisten automatisk</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL: INNSTILLINGER -->
+  <div class="panel" id="panel-settings">
+    <div class="card">
+      <div class="card-title">API-nøkkel</div>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:16px;">
+        Appen bruker Claude AI for å lage middagsforslag. Du trenger en gratis API-nøkkel fra Anthropic.<br><br>
+        <strong style="color:var(--text)">Slik får du nøkkel:</strong><br>
+        1. Gå til <strong style="color:var(--accent)">console.anthropic.com</strong><br>
+        2. Opprett en konto (gratis)<br>
+        3. Gå til «API Keys» og lag en ny nøkkel<br>
+        4. Lim den inn her under 👇
+      </p>
+      <label>Din API-nøkkel</label>
+      <input type="password" id="api-key" placeholder="sk-ant-..." style="margin-bottom:12px;">
+      <button class="btn btn-primary" onclick="saveKey()">💾 Lagre nøkkel</button>
+      <button class="btn btn-secondary" style="margin-top:8px;" onclick="clearKey()">🗑 Slett nøkkel</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Om appen</div>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+        Middagsplanleggeren er en gratis app som bruker kunstig intelligens til å lage personlige middagsforslag og handlelister. API-nøkkelen lagres kun lokalt på din enhet og sendes aldri videre.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="switchTab('criteria', this)">
+    <div class="nav-icon">⚙️</div>
+    <div class="nav-label">Kriterier</div>
+  </button>
+  <button class="nav-item" onclick="switchTab('week', this)">
+    <div class="nav-icon">📅</div>
+    <div class="nav-label">Ukemeny</div>
+  </button>
+  <button class="nav-item" onclick="switchTab('shop', this)">
+    <div class="nav-icon">🛒</div>
+    <div class="nav-label">Handleliste</div>
+  </button>
+  <button class="nav-item" onclick="switchTab('settings', this)">
+    <div class="nav-icon">🔑</div>
+    <div class="nav-label">Nøkkel</div>
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DAYS = ['Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'];
+let currentMeals = [];
+let currentShopList = {};
+
+// Chips toggle
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => chip.classList.toggle('selected'));
+});
+
+function switchTab(name, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+function getSelectedChips(groupId) {
+  return [...document.querySelectorAll(`#${groupId} .chip.selected`)].map(c => c.dataset.val);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function saveKey() {
+  const key = document.getElementById('api-key').value.trim();
+  if (!key.startsWith('sk-')) { showToast('⚠️ Ugyldig nøkkel – må starte med sk-'); return; }
+  localStorage.setItem('claude_key', key);
+  showToast('✅ Nøkkel lagret!');
+}
+function clearKey() {
+  localStorage.removeItem('claude_key');
+  document.getElementById('api-key').value = '';
+  showToast('🗑 Nøkkel slettet');
+}
+window.addEventListener('load', () => {
+  const k = localStorage.getItem('claude_key');
+  if (k) document.getElementById('api-key').value = k;
+});
+
+async function generateMeals() {
+  const apiKey = localStorage.getItem('claude_key');
+  if (!apiKey) {
+    showToast('⚠️ Legg inn API-nøkkel under «Nøkkel»');
+    return;
+  }
+
+  const persons = document.getElementById('persons').value;
+  const time = document.getElementById('time').value;
+  const budget = document.getElementById('budget').value;
+  const difficulty = document.getElementById('difficulty').value;
+  const extra = document.getElementById('extra').value;
+  const cuisines = getSelectedChips('cuisine-chips');
+  const diets = getSelectedChips('diet-chips');
+
+  document.getElementById('error-msg').classList.remove('show');
+
+  // Switch to week tab
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-week').classList.add('active');
+  document.querySelectorAll('.nav-item')[1].classList.add('active');
+
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('week-content').innerHTML = '';
+
+  const prompt = `Du er en erfaren kokk og ernæringsekspert. Lag en ukemeny for 7 dager basert på disse kriteriene:
+- Antall personer: ${persons}
+- Kjøkkentyper: ${cuisines.join(', ') || 'ingen spesiell preferanse'}
+- Diett/allergier: ${diets.join(', ') || 'ingen'}
+- Tidsbruk: ${time}
+- Budsjett: ${budget}
+- Vanskelighetsgrad: ${difficulty}
+- Ekstra ønsker: ${extra || 'ingen'}
+
+Svar KUN med et JSON-objekt i dette eksakte formatet (ingen forklaringstekst):
+{
+  "meals": [
+    {
+      "day": "Mandag",
+      "name": "Rettens navn",
+      "description": "Kort beskrivelse på 1-2 setninger",
+      "time": "30 min",
+      "difficulty": "Enkel",
+      "tag": "Italiensk"
+    }
+  ],
+  "shoppingList": {
+    "Grønnsaker": [
+      { "item": "Løk", "amount": "3 stk" },
+      { "item": "Gulrot", "amount": "500g" }
+    ],
+    "Kjøtt og fisk": [
+      { "item": "Kyllingfilet", "amount": "1.2 kg" }
+    ],
+    "Meieri": [],
+    "Tørrvarer": [],
+    "Annet": []
+  }
+}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-6',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || 'API-feil');
+
+    const text = data.content[0].text;
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    currentMeals = parsed.meals;
+    currentShopList = parsed.shoppingList;
+
+    renderWeek(parsed.meals);
+    renderShopList(parsed.shoppingList);
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('week-content').innerHTML = '';
+    // Show error in criteria tab instead
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('panel-criteria').classList.add('active');
+    document.querySelectorAll('.nav-item')[0].classList.add('active');
+    document.getElementById('error-msg').classList.add('show');
+  }
+}
+
+function renderWeek(meals) {
+  document.getElementById('loading').classList.remove('show');
+  const container = document.getElementById('week-content');
+  container.innerHTML = meals.map(m => `
+    <div class="day-card">
+      <div class="day-header">
+        <span class="day-name">${m.day}</span>
+        <span class="day-tag">${m.tag || ''}</span>
+      </div>
+      <div class="day-body">
+        <div class="meal-name">${m.name}</div>
+        <div class="meal-desc">${m.description}</div>
+        <div class="meal-meta">
+          <span>⏱ ${m.time}</span>
+          <span>👨‍🍳 ${m.difficulty}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  showToast('✅ Ukemeny generert!');
+}
+
+function renderShopList(list) {
+  const container = document.getElementById('shop-content');
+  const cats = Object.entries(list).filter(([_, items]) => items.length > 0);
+  if (!cats.length) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">🛒</div><h3>Tom handleliste</h3></div>';
+    return;
+  }
+  container.innerHTML = cats.map(([cat, items]) => `
+    <div class="card shop-category">
+      <div class="shop-cat-title">${cat}</div>
+      ${items.map((it, i) => `
+        <div class="shop-item" onclick="toggleShopItem(this)" data-cat="${cat}" data-i="${i}">
+          <div class="shop-check"></div>
+          <span class="shop-item-text">${it.item}</span>
+          <span class="shop-item-amount">${it.amount}</span>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function toggleShopItem(el) {
+  el.classList.toggle('checked');
+}
+</script>
+</body>
+</html>
