@@ -127,4 +127,4 @@ Bygget med vibe coding ved hjelp av Claude AI som kodepartner.
 
 ---
 
-*Laget av Lars-Olav Loholm*
+*Laget av LOHOLM-WANNABEDEV*

@@ -1,0 +1,17 @@
+{
+  "name": "Middagsplanlegger",
+  "short_name": "Middag",
+  "description": "AI-genererte middagsforslag og handlelister",
+  "start_url": "/middag-app2/",
+  "display": "standalone",
+  "background_color": "#0f0f1a",
+  "theme_color": "#e8c547",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
