@@ -6,8 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1a1a2e">
-<link rel="manifest" href="manifest.json">
 <title>Middagsplanlegger</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -72,11 +73,7 @@
     font-weight: 300;
   }
 
-  .tabs {
-    display: flex;
-    gap: 8px;
-    padding: 0 24px 24px;
-  }
+  .tabs { display: flex; gap: 8px; padding: 0 24px 24px; }
   .tab {
     flex: 1;
     padding: 10px;
@@ -193,7 +190,6 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading p { color: var(--text-dim); font-size: 14px; }
 
-  /* DAY MEAL CARD */
   .day-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -202,7 +198,6 @@
     overflow: hidden;
     animation: fadeUp 0.4s ease forwards;
     opacity: 0;
-    transition: opacity 0.3s;
   }
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(12px); }
@@ -242,7 +237,6 @@
   .meal-meta { display: flex; gap: 12px; font-size: 12px; color: var(--text-dim); margin-bottom: 14px; }
   .meal-meta span { display: flex; align-items: center; gap: 4px; }
 
-  /* NY: KNAPPER PÅ HVERT KORT */
   .day-actions {
     display: flex;
     gap: 8px;
@@ -271,10 +265,20 @@
     border-color: rgba(232,197,71,0.3);
   }
   .day-btn-swap:hover { background: rgba(232,197,71,0.15); }
-  .day-btn-swap:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .day-btn-swap:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .day-btn-recipe {
+    background: rgba(100,180,255,0.08);
+    color: #64b4ff;
+    border-color: rgba(100,180,255,0.3);
   }
+  .day-btn-recipe:hover { background: rgba(100,180,255,0.15); }
+  .day-btn-recipe:disabled { opacity: 0.5; cursor: not-allowed; }
+  .day-btn-recipe.open {
+    background: rgba(100,180,255,0.18);
+    border-color: rgba(100,180,255,0.5);
+  }
+
   .day-btn-remove {
     background: rgba(255,107,107,0.08);
     color: var(--accent2);
@@ -282,7 +286,6 @@
   }
   .day-btn-remove:hover { background: rgba(255,107,107,0.15); }
 
-  /* MINI SPINNER FOR BYTT-KNAPP */
   .mini-spinner {
     width: 14px; height: 14px;
     border: 2px solid rgba(232,197,71,0.3);
@@ -291,8 +294,88 @@
     animation: spin 0.6s linear infinite;
     display: inline-block;
   }
+  .mini-spinner-blue {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(100,180,255,0.3);
+    border-top-color: #64b4ff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: inline-block;
+  }
 
-  /* SHOPPING LIST */
+  .recipe-panel {
+    display: none;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    animation: fadeUp 0.3s ease forwards;
+  }
+  .recipe-panel.open { display: block; }
+
+  .recipe-section-title {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #64b4ff;
+    margin-bottom: 10px;
+    margin-top: 14px;
+  }
+  .recipe-section-title:first-child { margin-top: 0; }
+
+  .ingredient-list { list-style: none; }
+  .ingredient-list li {
+    display: flex;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 14px;
+  }
+  .ingredient-list li:last-child { border-bottom: none; }
+  .ingredient-amount {
+    color: var(--accent);
+    font-weight: 500;
+    min-width: 60px;
+    font-size: 13px;
+  }
+
+  .steps-list { list-style: none; }
+  .steps-list li {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .steps-list li:last-child { border-bottom: none; }
+  .step-number {
+    min-width: 24px;
+    height: 24px;
+    background: rgba(232,197,71,0.1);
+    border: 1px solid rgba(232,197,71,0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .recipe-tips {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: rgba(232,197,71,0.06);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
   .shop-category { margin-bottom: 20px; }
   .shop-cat-title {
     font-size: 11px;
@@ -471,7 +554,7 @@
         </div>
       </div>
       <button class="btn btn-primary" onclick="generateMeals()">✨ Generer ukemeny</button>
-      <div class="error-msg" id="error-msg">Noe gikk galt. Sjekk at du har limt inn en gyldig API-nøkkel i innstillinger, og prøv igjen.</div>
+      <div class="error-msg" id="error-msg">Noe gikk galt. Sjekk at du har limt inn en gyldig API-nøkkel under «Nøkkel», og prøv igjen.</div>
     </div>
   </div>
 
@@ -506,10 +589,10 @@
     <div class="card">
       <div class="card-title">API-nøkkel</div>
       <p style="font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:16px;">
-        Appen bruker Claude AI for å lage middagsforslag. Du trenger en gratis API-nøkkel fra Anthropic.<br><br>
+        Appen bruker Claude AI for å lage middagsforslag. Du trenger en API-nøkkel fra Anthropic.<br><br>
         <strong style="color:var(--text)">Slik får du nøkkel:</strong><br>
         1. Gå til <strong style="color:var(--accent)">console.anthropic.com</strong><br>
-        2. Opprett en konto (gratis)<br>
+        2. Opprett en konto<br>
         3. Gå til «API Keys» og lag en ny nøkkel<br>
         4. Lim den inn her under 👇
       </p>
@@ -521,7 +604,7 @@
     <div class="card">
       <div class="card-title">Om appen</div>
       <p style="font-size:13px;color:var(--text-dim);line-height:1.7;">
-        Middagsplanleggeren er en gratis app som bruker kunstig intelligens til å lage personlige middagsforslag og handlelister. API-nøkkelen lagres kun lokalt på din enhet og sendes aldri videre.
+        Middagsplanleggeren bruker kunstig intelligens til å lage personlige middagsforslag og handlelister. API-nøkkelen lagres kun lokalt på din enhet.
       </p>
     </div>
   </div>
@@ -550,11 +633,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const DAYS = ['Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'];
 let currentMeals = [];
 let currentShopList = {};
+let recipeCache = {};
 
-// Chips toggle
 document.querySelectorAll('.chip').forEach(chip => {
   chip.addEventListener('click', () => chip.classList.toggle('selected'));
 });
@@ -593,7 +675,6 @@ window.addEventListener('load', () => {
   if (k) document.getElementById('api-key').value = k;
 });
 
-// Henter brukerkriterier fra skjema
 function getCriteria() {
   return {
     persons: document.getElementById('persons').value,
@@ -606,6 +687,29 @@ function getCriteria() {
   };
 }
 
+async function callClaude(prompt, maxTokens = 1000) {
+  const apiKey = localStorage.getItem('claude_key');
+  if (!apiKey) throw new Error('Ingen API-nøkkel');
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-opus-4-6',
+      max_tokens: maxTokens,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || 'API-feil');
+  const text = data.content[0].text;
+  return JSON.parse(text.replace(/```json|```/g, '').trim());
+}
+
 async function generateMeals() {
   const apiKey = localStorage.getItem('claude_key');
   if (!apiKey) { showToast('⚠️ Legg inn API-nøkkel under «Nøkkel»'); return; }
@@ -613,7 +717,6 @@ async function generateMeals() {
   const c = getCriteria();
   document.getElementById('error-msg').classList.remove('show');
 
-  // Bytt til ukemeny-fane
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('panel-week').classList.add('active');
@@ -621,6 +724,8 @@ async function generateMeals() {
 
   document.getElementById('loading').classList.add('show');
   document.getElementById('week-content').innerHTML = '';
+
+  recipeCache = {};
 
   const prompt = `Du er en erfaren kokk og ernæringsekspert. Lag en ukemeny for 7 dager basert på disse kriteriene:
 - Antall personer: ${c.persons}
@@ -644,12 +749,8 @@ Svar KUN med et JSON-objekt i dette eksakte formatet (ingen forklaringstekst):
     }
   ],
   "shoppingList": {
-    "Grønnsaker": [
-      { "item": "Løk", "amount": "3 stk" }
-    ],
-    "Kjøtt og fisk": [
-      { "item": "Kyllingfilet", "amount": "1.2 kg" }
-    ],
+    "Grønnsaker": [{ "item": "Løk", "amount": "3 stk" }],
+    "Kjøtt og fisk": [{ "item": "Kyllingfilet", "amount": "1.2 kg" }],
     "Meieri": [],
     "Tørrvarer": [],
     "Annet": []
@@ -657,34 +758,11 @@ Svar KUN med et JSON-objekt i dette eksakte formatet (ingen forklaringstekst):
 }`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-6',
-        max_tokens: 2000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || 'API-feil');
-
-    const text = data.content[0].text;
-    const clean = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
-
+    const parsed = await callClaude(prompt, 2000);
     currentMeals = parsed.meals;
     currentShopList = parsed.shoppingList;
-
     renderWeek(currentMeals);
     renderShopList(currentShopList);
-
   } catch (err) {
     console.error(err);
     document.getElementById('loading').classList.remove('show');
@@ -697,26 +775,14 @@ Svar KUN med et JSON-objekt i dette eksakte formatet (ingen forklaringstekst):
   }
 }
 
-// =====================
-// NY FUNKSJON: Bytt én middag
-// =====================
 async function swapMeal(index) {
-  const apiKey = localStorage.getItem('claude_key');
-  if (!apiKey) { showToast('⚠️ Legg inn API-nøkkel under «Nøkkel»'); return; }
-
   const meal = currentMeals[index];
   const c = getCriteria();
-
-  // Vis spinner på knappen
   const swapBtn = document.getElementById(`swap-btn-${index}`);
   swapBtn.disabled = true;
   swapBtn.innerHTML = '<span class="mini-spinner"></span> Bytter…';
 
-  // Lag en liste over eksisterende middager så AI ikke foreslår det samme
-  const existingMeals = currentMeals
-    .filter((_, i) => i !== index)
-    .map(m => m.name)
-    .join(', ');
+  const existingMeals = currentMeals.filter((_, i) => i !== index).map(m => m.name).join(', ');
 
   const prompt = `Du er en erfaren kokk. Foreslå én ny middag for ${meal.day} basert på disse kriteriene:
 - Antall personer: ${c.persons}
@@ -725,10 +791,9 @@ async function swapMeal(index) {
 - Tidsbruk: ${c.time}
 - Budsjett: ${c.budget}
 - Vanskelighetsgrad: ${c.difficulty}
-- Ekstra ønsker: ${c.extra || 'ingen'}
-- IKKE foreslå disse rettene som allerede er i menyen: ${existingMeals}
+- IKKE foreslå disse rettene: ${existingMeals}
 
-Svar KUN med et JSON-objekt (ingen forklaringstekst):
+Svar KUN med et JSON-objekt:
 {
   "name": "Rettens navn",
   "description": "Kort beskrivelse på 1-2 setninger",
@@ -738,34 +803,12 @@ Svar KUN med et JSON-objekt (ingen forklaringstekst):
 }`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-6',
-        max_tokens: 300,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || 'API-feil');
-
-    const text = data.content[0].text;
-    const clean = text.replace(/```json|```/g, '').trim();
-    const newMeal = JSON.parse(clean);
-
-    // Oppdater listen og gjenoppbygg kortet
+    const newMeal = await callClaude(prompt, 300);
     newMeal.day = meal.day;
     currentMeals[index] = newMeal;
+    delete recipeCache[index];
     updateDayCard(index, newMeal);
     showToast(`🔄 ${meal.day} byttet ut!`);
-
   } catch (err) {
     console.error(err);
     showToast('⚠️ Noe gikk galt, prøv igjen');
@@ -774,17 +817,92 @@ Svar KUN med et JSON-objekt (ingen forklaringstekst):
   }
 }
 
-// =====================
-// NY FUNKSJON: Fjern én dag
-// =====================
+async function toggleRecipe(index) {
+  const panel = document.getElementById(`recipe-panel-${index}`);
+  const btn = document.getElementById(`recipe-btn-${index}`);
+  const meal = currentMeals[index];
+
+  if (panel.classList.contains('open')) {
+    panel.classList.remove('open');
+    btn.classList.remove('open');
+    btn.innerHTML = '📖 Oppskrift';
+    return;
+  }
+
+  if (recipeCache[index]) {
+    panel.classList.add('open');
+    btn.classList.add('open');
+    btn.innerHTML = '📖 Lukk';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="mini-spinner-blue"></span> Henter…';
+
+  const c = getCriteria();
+  const prompt = `Du er en erfaren kokk. Lag en detaljert oppskrift for "${meal.name}" til ${c.persons} personer.
+
+Svar KUN med et JSON-objekt i dette eksakte formatet (ingen forklaringstekst):
+{
+  "ingredienser": [
+    { "mengde": "400g", "navn": "kyllingfilet" },
+    { "mengde": "2 stk", "navn": "løk" }
+  ],
+  "fremgangsmåte": [
+    "Skjær kyllingen i biter.",
+    "Fres løk i olje på middels varme til den er myk, ca. 5 minutter.",
+    "Tilsett kylling og stek i 8 minutter til den er gjennomstekt."
+  ],
+  "tips": "Ett kort og nyttig tips for denne retten."
+}`;
+
+  try {
+    const recipe = await callClaude(prompt, 1500);
+    recipeCache[index] = recipe;
+
+    const ingrediensHTML = recipe.ingredienser.map(i => `
+      <li>
+        <span class="ingredient-amount">${i.mengde}</span>
+        <span>${i.navn}</span>
+      </li>
+    `).join('');
+
+    const stegHTML = recipe.fremgangsmåte.map((steg, i) => `
+      <li>
+        <span class="step-number">${i + 1}</span>
+        <span>${steg}</span>
+      </li>
+    `).join('');
+
+    panel.innerHTML = `
+      <div class="recipe-section-title">Ingredienser</div>
+      <ul class="ingredient-list">${ingrediensHTML}</ul>
+      <div class="recipe-section-title">Fremgangsmåte</div>
+      <ol class="steps-list">${stegHTML}</ol>
+      ${recipe.tips ? `<div class="recipe-tips">💡 ${recipe.tips}</div>` : ''}
+    `;
+
+    panel.classList.add('open');
+    btn.classList.add('open');
+    btn.innerHTML = '📖 Lukk';
+    btn.disabled = false;
+
+  } catch (err) {
+    console.error(err);
+    showToast('⚠️ Kunne ikke hente oppskrift, prøv igjen');
+    btn.disabled = false;
+    btn.innerHTML = '📖 Oppskrift';
+  }
+}
+
 function removeMeal(index) {
   const dayName = currentMeals[index].day;
   currentMeals.splice(index, 1);
+  delete recipeCache[index];
   renderWeek(currentMeals);
   showToast(`🗑 ${dayName} fjernet`);
 }
 
-// Oppdaterer ett enkelt dagskort etter bytte
 function updateDayCard(index, meal) {
   const card = document.getElementById(`day-card-${index}`);
   if (!card) return;
@@ -796,9 +914,14 @@ function updateDayCard(index, meal) {
     <span>⏱ ${meal.time}</span>
     <span>👨‍🍳 ${meal.difficulty}</span>
   `;
-  const swapBtn = card.querySelector(`#swap-btn-${index}`);
+  const swapBtn = document.getElementById(`swap-btn-${index}`);
   swapBtn.disabled = false;
   swapBtn.innerHTML = '🔄 Bytt';
+  const recipePanel = document.getElementById(`recipe-panel-${index}`);
+  const recipeBtn = document.getElementById(`recipe-btn-${index}`);
+  recipePanel.classList.remove('open');
+  recipeBtn.classList.remove('open');
+  recipeBtn.innerHTML = '📖 Oppskrift';
 }
 
 function renderWeek(meals) {
@@ -832,10 +955,14 @@ function renderWeek(meals) {
           <button class="day-btn day-btn-swap" id="swap-btn-${i}" onclick="swapMeal(${i})">
             🔄 Bytt
           </button>
+          <button class="day-btn day-btn-recipe" id="recipe-btn-${i}" onclick="toggleRecipe(${i})">
+            📖 Oppskrift
+          </button>
           <button class="day-btn day-btn-remove" onclick="removeMeal(${i})">
             🗑 Fjern
           </button>
         </div>
+        <div class="recipe-panel" id="recipe-panel-${i}"></div>
       </div>
     </div>
   `).join('');
@@ -853,8 +980,8 @@ function renderShopList(list) {
   container.innerHTML = cats.map(([cat, items]) => `
     <div class="card shop-category">
       <div class="shop-cat-title">${cat}</div>
-      ${items.map((it, i) => `
-        <div class="shop-item" onclick="toggleShopItem(this)" data-cat="${cat}" data-i="${i}">
+      ${items.map(it => `
+        <div class="shop-item" onclick="toggleShopItem(this)">
           <div class="shop-check"></div>
           <span class="shop-item-text">${it.item}</span>
           <span class="shop-item-amount">${it.amount}</span>

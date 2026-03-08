@@ -20,6 +20,7 @@ Middagsplanleggeren er en Progressive Web App (PWA) som kan installeres på mobi
 - Bytt ut enkeltretter med ett klikk
 - Fjern dager du ikke trenger (ferie, take-out osv.)
 - Huk av varer i handlelisten mens du handler
+- 📖 Vis oppskrift per dag – ingredienser og fremgangsmåte hentes ved behov og caches lokalt
 - Fungerer som mobilapp (PWA) på både iPhone og Android
 
 ---
@@ -64,7 +65,8 @@ Appen har ingen egen server eller database. All data lagres lokalt i brukerens n
 3. Gå til **⚙️ Kriterier** og velg dine preferanser
 4. Trykk **✨ Generer ukemeny**
 5. Bruk **🔄 Bytt** eller **🗑 Fjern** på enkeltdager etter behov
-6. Se handlelisten under **🛒 Handleliste**
+6. Trykk **📖 Oppskrift** på en dag for å se ingredienser og fremgangsmåte
+7. Se handlelisten under **🛒 Handleliste**
 
 ### Installer som mobilapp
 
@@ -88,6 +90,9 @@ Appen har ingen egen server eller database. All data lagres lokalt i brukerens n
 ```
 middag-app/
 ├── index.html        # Hele appen (HTML, CSS og JavaScript)
+├── manifest.json     # PWA-konfigurasjon
+├── icon.svg          # App-ikon (👨‍🍳)
+├── .gitignore        # Ekskluderer sensitive filer
 ├── .gitattributes    # Git-konfigurasjon
 └── README.md         # Denne filen
 ```
@@ -98,8 +103,8 @@ middag-app/
 
 - [ ] Eksporter handleliste som tekst
 - [ ] Lagre favorittmiddager
-- [ ] Full oppskrift med fremgangsmåte
-- [ ] Se tidligere ukeменyer
+- [ ] Se tidligere ukemenyer
+- [ ] Funksjon for å foreslå ny funksjonalitet
 - [ ] Familiedeling med synkronisering
 - [ ] Backend-server slik at brukere slipper egen API-nøkkel
 
@@ -109,8 +114,10 @@ middag-app/
 
 | Dato | Endring |
 |------|---------|
-| 06.03.2026 | Første versjon – ukemeny og handleliste |
+| 08.03.2026 | Oppskrift-funksjon med ingredienser, fremgangsmåte og tips |
+| 06.03.2026 | PWA-ikon (👨‍🍳), manifest.json, .gitignore |
 | 06.03.2026 | La til bytt og fjern-knapper per dag |
+| 06.03.2026 | Første versjon – ukemeny og handleliste |
 
 ---
 
