@@ -687,6 +687,21 @@ function getCriteria() {
   };
 }
 
+// ── API-LOGGING ──
+function logApiCall(type, usage) {
+  const tokens = (usage?.input_tokens || 0) + (usage?.output_tokens || 0);
+  const entry = { ts: new Date().toISOString(), type, tokens };
+  let log = [];
+  try {
+    const raw = localStorage.getItem('middag_api_log');
+    if (raw) log = JSON.parse(raw);
+  } catch(e) {}
+  log.push(entry);
+  // Behold maks 200 oppføringer så localStorage ikke vokser ubegrenset
+  if (log.length > 200) log = log.slice(-200);
+  localStorage.setItem('middag_api_log', JSON.stringify(log));
+}
+
 async function callClaude(prompt, maxTokens = 1000) {
   const apiKey = localStorage.getItem('claude_key');
   if (!apiKey) throw new Error('Ingen API-nøkkel');
@@ -707,7 +722,7 @@ async function callClaude(prompt, maxTokens = 1000) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error?.message || 'API-feil');
   const text = data.content[0].text;
-  return JSON.parse(text.replace(/```json|```/g, '').trim());
+  return { parsed: JSON.parse(text.replace(/```json|```/g, '').trim()), usage: data.usage };
 }
 
 async function generateMeals() {
@@ -758,7 +773,8 @@ Svar KUN med et JSON-objekt i dette eksakte formatet (ingen forklaringstekst):
 }`;
 
   try {
-    const parsed = await callClaude(prompt, 2000);
+    const { parsed, usage } = await callClaude(prompt, 2000);
+    logApiCall('ukemeny', usage);
     currentMeals = parsed.meals;
     currentShopList = parsed.shoppingList;
     renderWeek(currentMeals);
@@ -803,7 +819,8 @@ Svar KUN med et JSON-objekt:
 }`;
 
   try {
-    const newMeal = await callClaude(prompt, 300);
+    const { parsed: newMeal, usage } = await callClaude(prompt, 300);
+    logApiCall('bytt', usage);
     newMeal.day = meal.day;
     currentMeals[index] = newMeal;
     delete recipeCache[index];
@@ -857,7 +874,8 @@ Svar KUN med et JSON-objekt i dette eksakte formatet (ingen forklaringstekst):
 }`;
 
   try {
-    const recipe = await callClaude(prompt, 1500);
+    const { parsed: recipe, usage } = await callClaude(prompt, 1500);
+    logApiCall('oppskrift', usage);
     recipeCache[index] = recipe;
 
     const ingrediensHTML = recipe.ingredienser.map(i => `

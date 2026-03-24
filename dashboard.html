@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard – Middagsplanleggeren</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c10;
+    --surface: #0d1117;
+    --surface2: #111820;
+    --border: rgba(0,255,140,0.12);
+    --border-bright: rgba(0,255,140,0.35);
+    --green: #00ff8c;
+    --green-dim: rgba(0,255,140,0.15);
+    --green-mid: rgba(0,255,140,0.4);
+    --amber: #ffb830;
+    --amber-dim: rgba(255,184,48,0.12);
+    --red: #ff4d6a;
+    --red-dim: rgba(255,77,106,0.12);
+    --blue: #38bdf8;
+    --blue-dim: rgba(56,189,248,0.1);
+    --text: #e2e8f0;
+    --text-dim: #4a5568;
+    --text-mid: #718096;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.15) 2px,
+      rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* Grid background */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,140,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,140,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-bright);
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-left {}
+  .header-tag {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--green);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-family: var(--sans);
+    font-size: clamp(22px, 4vw, 36px);
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--text);
+    letter-spacing: -1px;
+  }
+  .header h1 span { color: var(--green); }
+
+  .header-right { text-align: right; }
+  .clock {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  .date-str {
+    font-size: 11px;
+    color: var(--text-mid);
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+  .live-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    background: var(--green);
+    border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 1.5s ease infinite;
+    vertical-align: middle;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--green-mid); }
+    50% { opacity: 0.7; box-shadow: 0 0 0 5px transparent; }
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── STATUS CARDS ── */
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+  .status-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.5s ease forwards;
+    opacity: 0;
+  }
+  .status-card:nth-child(1) { animation-delay: 0.05s; border-left: 2px solid var(--green); }
+  .status-card:nth-child(2) { animation-delay: 0.1s; border-left: 2px solid var(--blue); }
+  .status-card:nth-child(3) { animation-delay: 0.15s; border-left: 2px solid var(--amber); }
+  .status-card:nth-child(4) { animation-delay: 0.2s; border-left: 2px solid var(--green); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .card-value {
+    font-size: 13px;
+    color: var(--text);
+    word-break: break-all;
+  }
+  .card-value a {
+    color: var(--green);
+    text-decoration: none;
+  }
+  .card-value a:hover { text-decoration: underline; }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 2px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .badge-green { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-mid); }
+  .badge-amber { background: var(--amber-dim); color: var(--amber); }
+
+  /* ── TWO COLUMN LAYOUT ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── PANEL ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 22px;
+    animation: fadeIn 0.5s ease 0.2s forwards;
+    opacity: 0;
+  }
+  .panel-title {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── FEATURE LIST ── */
+  .feature-list { list-style: none; }
+  .feature-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 0;
+    font-size: 12px;
+    line-height: 1.4;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text-mid);
+  }
+  .feature-list li:last-child { border-bottom: none; }
+  .fi { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+  .feature-list li.done { color: var(--text); }
+  .feature-list li.done .fi { color: var(--green); }
+  .feature-list li.todo .fi { color: var(--text-dim); }
+
+  /* ── ARCHITECTURE ── */
+  .arch-wrap {
+    margin-bottom: 36px;
+    animation: fadeIn 0.5s ease 0.3s forwards;
+    opacity: 0;
+  }
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+    padding: 24px 0;
+    scrollbar-width: none;
+  }
+  .arch-flow::-webkit-scrollbar { display: none; }
+
+  .arch-node {
+    background: var(--surface2);
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    padding: 16px 20px;
+    text-align: center;
+    min-width: 140px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .arch-node-icon { font-size: 22px; margin-bottom: 8px; }
+  .arch-node-label {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .arch-node-sub { font-size: 10px; color: var(--text-dim); }
+
+  .arch-arrow {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 0 8px;
+  }
+  .arch-arrow-line {
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--green-mid), var(--green));
+    position: relative;
+  }
+  .arch-arrow-line::after {
+    content: '▶';
+    position: absolute;
+    right: -8px;
+    top: -6px;
+    font-size: 10px;
+    color: var(--green);
+  }
+  .arch-arrow-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; white-space: nowrap; }
+
+  /* ── API LOG ── */
+  .api-wrap {
+    margin-bottom: 36px;
+    animation: fadeIn 0.5s ease 0.35s forwards;
+    opacity: 0;
+  }
+  .api-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 500px) { .api-stats { grid-template-columns: 1fr 1fr; } }
+  .api-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+  }
+  .api-stat-num {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+  }
+  .api-stat-label { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; margin-top: 4px; }
+
+  .log-table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .log-table th {
+    background: var(--surface2);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+  }
+  .log-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text-mid);
+    vertical-align: middle;
+  }
+  .log-table tr:last-child td { border-bottom: none; }
+  .log-table tr:hover td { background: rgba(0,255,140,0.02); }
+  .type-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+  .type-ukemeny { background: var(--green-dim); color: var(--green); }
+  .type-bytt { background: var(--amber-dim); color: var(--amber); }
+  .type-oppskrift { background: var(--blue-dim); color: var(--blue); }
+  .type-ukjent { background: rgba(255,255,255,0.05); color: var(--text-dim); }
+
+  .no-data {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-dim);
+    font-size: 12px;
+    line-height: 2;
+  }
+  .no-data strong { display: block; color: var(--text-mid); margin-bottom: 6px; }
+
+  /* ── LINKS ── */
+  .links-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+  }
+  .link-btn-green {
+    background: var(--green-dim);
+    border: 1px solid var(--green-mid);
+    color: var(--green);
+  }
+  .link-btn-green:hover { background: rgba(0,255,140,0.25); }
+  .link-btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text-mid);
+  }
+  .link-btn-ghost:hover { color: var(--text); border-color: var(--border-bright); background: rgba(255,255,255,0.03); }
+
+  /* ── FOOTER ── */
+  .footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .footer-text { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+  .footer-text span { color: var(--green); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-tag"><span class="live-dot"></span>Live</div>
+      <h1>Admin Dashboard<br><span>Middagsplanleggeren</span></h1>
+    </div>
+    <div class="header-right">
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="date-str" id="date-str">–</div>
+    </div>
+  </div>
+
+  <!-- STATUS CARDS -->
+  <div class="section-title">App-status</div>
+  <div class="status-grid">
+    <div class="status-card">
+      <div class="card-label">Live URL</div>
+      <div class="card-value"><a href="https://loholm-wannabedev.github.io/middag-app2" target="_blank">loholm-wannabedev.github.io/middag-app2</a></div>
+    </div>
+    <div class="status-card">
+      <div class="card-label">GitHub Repo</div>
+      <div class="card-value"><a href="https://github.com/loholm-wannabedev/middag-app2" target="_blank">loholm-wannabedev/middag-app2</a></div>
+    </div>
+    <div class="status-card">
+      <div class="card-label">Hosting</div>
+      <div class="card-value"><span class="badge badge-green">● GitHub Pages</span></div>
+    </div>
+    <div class="status-card">
+      <div class="card-label">PWA / AI-modell</div>
+      <div class="card-value">
+        <span class="badge badge-green">PWA aktiv</span>&nbsp;
+        <span class="badge badge-amber">claude-opus-4-6</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- API LOG -->
+  <div class="api-wrap">
+    <div class="section-title">API-forbruk (fra denne nettleseren)</div>
+    <div class="api-stats">
+      <div class="api-stat">
+        <div class="api-stat-num" id="stat-calls">0</div>
+        <div class="api-stat-label">Totale kall</div>
+      </div>
+      <div class="api-stat">
+        <div class="api-stat-num" id="stat-tokens">0</div>
+        <div class="api-stat-label">Est. tokens</div>
+      </div>
+      <div class="api-stat">
+        <div class="api-stat-num" id="stat-days">0</div>
+        <div class="api-stat-label">Dager med data</div>
+      </div>
+    </div>
+    <div class="log-table-wrap" id="log-container">
+      <div class="no-data">
+        <strong>Ingen loggdata ennå</strong>
+        Appen logger API-kall automatisk til localStorage.<br>
+        Bruk appen, så dukker dataene opp her.
+      </div>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <div class="arch-wrap">
+    <div class="section-title">Apparkitektur</div>
+    <div class="panel" style="padding: 12px 22px 22px;">
+      <div class="arch-flow">
+        <div class="arch-node">
+          <div class="arch-node-icon">👤</div>
+          <div class="arch-node-label">Bruker</div>
+          <div class="arch-node-sub">iPhone / PC</div>
+        </div>
+        <div class="arch-arrow">
+          <div class="arch-arrow-line"></div>
+          <div class="arch-arrow-label">input</div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-node-icon">📄</div>
+          <div class="arch-node-label">index.html</div>
+          <div class="arch-node-sub">HTML + CSS + JS</div>
+        </div>
+        <div class="arch-arrow">
+          <div class="arch-arrow-line"></div>
+          <div class="arch-arrow-label">fetch()</div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-node-icon">🤖</div>
+          <div class="arch-node-label">Claude API</div>
+          <div class="arch-node-sub">Anthropic</div>
+        </div>
+        <div class="arch-arrow">
+          <div class="arch-arrow-line"></div>
+          <div class="arch-arrow-label">JSON</div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-node-icon">💾</div>
+          <div class="arch-node-label">localStorage</div>
+          <div class="arch-node-sub">Lokal lagring</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-title">✅ Ferdige features</div>
+      <ul class="feature-list">
+        <li class="done"><span class="fi">▸</span> Generer ukemeny for 7 dager</li>
+        <li class="done"><span class="fi">▸</span> Handleliste sortert etter kategori</li>
+        <li class="done"><span class="fi">▸</span> Bytt ut én middag med AI-forslag</li>
+        <li class="done"><span class="fi">▸</span> Fjern en dag fra ukemenyen</li>
+        <li class="done"><span class="fi">▸</span> Oppskrift med ingredienser og steg</li>
+        <li class="done"><span class="fi">▸</span> PWA – installert som app</li>
+        <li class="done"><span class="fi">▸</span> Oppskrift-cache (ingen doble kall)</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <div class="panel-title">📋 Backlog</div>
+      <ul class="feature-list">
+        <li class="todo"><span class="fi">○</span> Eksporter handleliste som tekst</li>
+        <li class="todo"><span class="fi">○</span> Lagre favorittmiddager</li>
+        <li class="todo"><span class="fi">○</span> Se tidligere ukemenyer</li>
+        <li class="todo"><span class="fi">○</span> Foreslå ny funksjonalitet</li>
+        <li class="todo"><span class="fi">○</span> Familiedeling med synkronisering</li>
+        <li class="todo"><span class="fi">○</span> Backend – slippe API-nøkkel</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- LINKS -->
+  <div class="section-title">Snarveier</div>
+  <div class="links-row">
+    <a class="link-btn link-btn-green" href="https://loholm-wannabedev.github.io/middag-app2" target="_blank">▶ Åpne appen</a>
+    <a class="link-btn link-btn-ghost" href="https://github.com/loholm-wannabedev/middag-app2" target="_blank">⌥ GitHub Repo</a>
+    <a class="link-btn link-btn-ghost" href="https://console.anthropic.com" target="_blank">⌥ Anthropic Console</a>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-text">Middagsplanleggeren Admin Dashboard</div>
+    <div class="footer-text">Sist oppdatert: <span id="last-updated">–</span></div>
+  </div>
+
+</div>
+
+<script>
+// ── KLOKKE ──
+function updateClock() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+  document.getElementById('clock').textContent = `${hh}:${mm}:${ss}`;
+
+  const days = ['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'];
+  const months = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
+  const d = `${days[now.getDay()]} ${now.getDate()}. ${months[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('date-str').textContent = d;
+  document.getElementById('last-updated').textContent = `${hh}:${mm}`;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── API-LOG FRA LOCALSTORAGE ──
+function loadApiLog() {
+  let log = [];
+  try {
+    const raw = localStorage.getItem('middag_api_log');
+    if (raw) log = JSON.parse(raw);
+  } catch(e) {}
+
+  if (!log.length) return;
+
+  // Statistikk
+  const totalCalls = log.length;
+  const totalTokens = log.reduce((sum, e) => sum + (e.tokens || 0), 0);
+  const days = new Set(log.map(e => e.ts ? new Date(e.ts).toDateString() : 'ukjent')).size;
+
+  document.getElementById('stat-calls').textContent = totalCalls;
+  document.getElementById('stat-tokens').textContent = totalTokens.toLocaleString('no');
+  document.getElementById('stat-days').textContent = days;
+
+  // Tabell – siste 10
+  const recent = [...log].reverse().slice(0, 10);
+  const typeClass = { ukemeny: 'type-ukemeny', bytt: 'type-bytt', oppskrift: 'type-oppskrift' };
+  const typeLabel = { ukemeny: 'UKEMENY', bytt: 'BYTT', oppskrift: 'OPPSKRIFT' };
+
+  const rows = recent.map(e => {
+    const d = e.ts ? new Date(e.ts) : null;
+    const tid = d ? `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} ${d.getDate()}.${d.getMonth()+1}` : '–';
+    const cls = typeClass[e.type] || 'type-ukjent';
+    const lbl = typeLabel[e.type] || (e.type || '–').toUpperCase();
+    return `<tr>
+      <td>${tid}</td>
+      <td><span class="type-badge ${cls}">${lbl}</span></td>
+      <td>${e.tokens ? e.tokens.toLocaleString('no') : '–'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('log-container').innerHTML = `
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>Tidspunkt</th>
+          <th>Type</th>
+          <th>Tokens</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+loadApiLog();
+</script>
+</body>
+</html>
