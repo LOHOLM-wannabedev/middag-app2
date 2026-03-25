@@ -687,21 +687,6 @@ function getCriteria() {
   };
 }
 
-// ── API-LOGGING ──
-function logApiCall(type, usage) {
-  const tokens = (usage?.input_tokens || 0) + (usage?.output_tokens || 0);
-  const entry = { ts: new Date().toISOString(), type, tokens };
-  let log = [];
-  try {
-    const raw = localStorage.getItem('middag_api_log');
-    if (raw) log = JSON.parse(raw);
-  } catch(e) {}
-  log.push(entry);
-  // Behold maks 200 oppføringer så localStorage ikke vokser ubegrenset
-  if (log.length > 200) log = log.slice(-200);
-  localStorage.setItem('middag_api_log', JSON.stringify(log));
-}
-
 async function callClaude(prompt, maxTokens = 1000) {
   const apiKey = localStorage.getItem('claude_key');
   if (!apiKey) throw new Error('Ingen API-nøkkel');
@@ -722,7 +707,7 @@ async function callClaude(prompt, maxTokens = 1000) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error?.message || 'API-feil');
   const text = data.content[0].text;
-  return { parsed: JSON.parse(text.replace(/```json|```/g, '').trim()), usage: data.usage };
+  return JSON.parse(text.replace(/```json|```/g, '').trim());
 }
 
 async function generateMeals() {
@@ -773,8 +758,7 @@ Svar KUN med et JSON-objekt i dette eksakte formatet (ingen forklaringstekst):
 }`;
 
   try {
-    const { parsed, usage } = await callClaude(prompt, 2000);
-    logApiCall('ukemeny', usage);
+    const parsed = await callClaude(prompt, 2000);
     currentMeals = parsed.meals;
     currentShopList = parsed.shoppingList;
     renderWeek(currentMeals);
@@ -819,8 +803,7 @@ Svar KUN med et JSON-objekt:
 }`;
 
   try {
-    const { parsed: newMeal, usage } = await callClaude(prompt, 300);
-    logApiCall('bytt', usage);
+    const newMeal = await callClaude(prompt, 300);
     newMeal.day = meal.day;
     currentMeals[index] = newMeal;
     delete recipeCache[index];
@@ -874,8 +857,7 @@ Svar KUN med et JSON-objekt i dette eksakte formatet (ingen forklaringstekst):
 }`;
 
   try {
-    const { parsed: recipe, usage } = await callClaude(prompt, 1500);
-    logApiCall('oppskrift', usage);
+    const recipe = await callClaude(prompt, 1500);
     recipeCache[index] = recipe;
 
     const ingrediensHTML = recipe.ingredienser.map(i => `
@@ -995,7 +977,9 @@ function renderShopList(list) {
     container.innerHTML = '<div class="empty"><div class="empty-icon">🛒</div><h3>Tom handleliste</h3></div>';
     return;
   }
-  container.innerHTML = cats.map(([cat, items]) => `
+  container.innerHTML = `
+    <button class="btn btn-secondary" style="margin-bottom:16px;" onclick="copyShopList()">📋 Kopier til utklippstavle</button>
+  ` + cats.map(([cat, items]) => `
     <div class="card shop-category">
       <div class="shop-cat-title">${cat}</div>
       ${items.map(it => `
@@ -1011,6 +995,17 @@ function renderShopList(list) {
 
 function toggleShopItem(el) {
   el.classList.toggle('checked');
+}
+
+function copyShopList() {
+  const cats = Object.entries(currentShopList).filter(([_, items]) => items.length > 0);
+  if (!cats.length) return;
+  const text = cats.map(([cat, items]) =>
+    `${cat.toUpperCase()}\n` + items.map(it => `- ${it.item} (${it.amount})`).join('\n')
+  ).join('\n\n');
+  navigator.clipboard.writeText(text)
+    .then(() => showToast('📋 Handleliste kopiert!'))
+    .catch(() => showToast('⚠️ Kunne ikke kopiere, prøv igjen'));
 }
 </script>
 </body>
