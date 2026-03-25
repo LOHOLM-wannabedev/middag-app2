@@ -61,7 +61,6 @@
   .header {
     padding: 48px 24px 24px;
     position: relative;
-    overflow: hidden;
   }
   .header::after {
     content: '🍽';
@@ -200,7 +199,7 @@
     transition: all 0.2s;
     margin-top: 8px;
   }
-  .btn-primary { background: var(--accent); color: #0f0f1a; }
+  .btn-primary { background: var(--accent); color: #ffffff; }
   .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
   .btn-primary:active { transform: translateY(0); }
   .btn-secondary {
@@ -526,7 +525,7 @@
   <div class="header">
     <h1>Middag&shy;planlegger</h1>
     <p>AI-genererte middagsforslag tilpasset deg</p>
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <button class="theme-toggle" id="theme-toggle">🌙</button>
   </div>
 
   <!-- PANEL: KRITERIER -->
@@ -714,6 +713,8 @@ window.addEventListener('load', () => {
     document.body.classList.add('dark');
     document.getElementById('theme-toggle').textContent = '☀️';
   }
+
+  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 });
 
 function toggleTheme() {
