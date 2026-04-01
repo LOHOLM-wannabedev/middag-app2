@@ -460,6 +460,33 @@
   .empty h3 { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text); margin-bottom: 8px; }
   .empty p { font-size: 14px; line-height: 1.6; }
 
+  /* Ingen tilgang-skjerm */
+  .no-access {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+    z-index: 999;
+  }
+  .no-access-icon { font-size: 64px; margin-bottom: 24px; }
+  .no-access h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .no-access p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    max-width: 300px;
+  }
+
   .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -526,7 +553,7 @@
   <div class="header">
     <h1>Middag&shy;planlegger</h1>
     <p>AI-genererte middagsforslag tilpasset deg</p>
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()"></button>
   </div>
 
   <!-- PANEL: KRITERIER -->
@@ -589,7 +616,7 @@
         </div>
       </div>
       <button class="btn btn-primary" onclick="generateMeals()">✨ Generer ukemeny</button>
-      <div class="error-msg" id="error-msg">Noe gikk galt. Sjekk at du har limt inn en gyldig API-nøkkel under «Nøkkel», og prøv igjen.</div>
+      <div class="error-msg" id="error-msg">Noe gikk galt. Prøv igjen, eller kontakt Lars-Olav.</div>
     </div>
   </div>
 
@@ -619,33 +646,9 @@
     </div>
   </div>
 
-  <!-- PANEL: INNSTILLINGER -->
-  <div class="panel" id="panel-settings">
-    <div class="card">
-      <div class="card-title">API-nøkkel</div>
-      <p style="font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:16px;">
-        Appen bruker Claude AI for å lage middagsforslag. Du trenger en API-nøkkel fra Anthropic.<br><br>
-        <strong style="color:var(--text)">Slik får du nøkkel:</strong><br>
-        1. Gå til <strong style="color:var(--accent)">console.anthropic.com</strong><br>
-        2. Opprett en konto<br>
-        3. Gå til «API Keys» og lag en ny nøkkel<br>
-        4. Lim den inn her under 👇
-      </p>
-      <label>Din API-nøkkel</label>
-      <input type="password" id="api-key" placeholder="sk-ant-..." style="margin-bottom:12px;">
-      <button class="btn btn-primary" onclick="saveKey()">💾 Lagre nøkkel</button>
-      <button class="btn btn-secondary" style="margin-top:8px;" onclick="clearKey()">🗑 Slett nøkkel</button>
-    </div>
-    <div class="card">
-      <div class="card-title">Om appen</div>
-      <p style="font-size:13px;color:var(--text-dim);line-height:1.7;">
-        Middagsplanleggeren bruker kunstig intelligens til å lage personlige middagsforslag og handlelister. API-nøkkelen lagres kun lokalt på din enhet.
-      </p>
-    </div>
-  </div>
 </div>
 
-<!-- BOTTOM NAV -->
+<!-- BOTTOM NAV – tre faner -->
 <nav class="bottom-nav">
   <button class="nav-item active" onclick="switchTab('criteria', this)">
     <div class="nav-icon">⚙️</div>
@@ -659,23 +662,71 @@
     <div class="nav-icon">🛒</div>
     <div class="nav-label">Handleliste</div>
   </button>
-  <button class="nav-item" onclick="switchTab('settings', this)">
-    <div class="nav-icon">🔑</div>
-    <div class="nav-label">Nøkkel</div>
-  </button>
 </nav>
 
 <div class="toast" id="toast"></div>
 
 <script>
+// ── KONFIGURASJON ──
+const BACKEND_URL = 'https://middag-backend.vercel.app/api/claude';
+
+// ── STATE ──
 let currentMeals = [];
 let currentShopList = {};
 let recipeCache = {};
 
-document.querySelectorAll('.chip').forEach(chip => {
-  chip.addEventListener('click', () => chip.classList.toggle('selected'));
+// ── TOKEN-HÅNDTERING ──
+function initToken() {
+  const hash = window.location.hash.slice(1);
+  if (hash) {
+    localStorage.setItem('user_token', hash);
+    history.replaceState(null, '', window.location.pathname);
+  }
+}
+
+function getToken() {
+  return localStorage.getItem('user_token');
+}
+
+function showNoAccess() {
+  const screen = document.createElement('div');
+  screen.className = 'no-access';
+  screen.innerHTML = `
+    <div class="no-access-icon">🔒</div>
+    <h2>Ingen tilgang</h2>
+    <p>Du trenger en invitasjonslenke fra Lars-Olav for å bruke denne appen.</p>
+  `;
+  document.body.appendChild(screen);
+}
+
+// ── OPPSTART ──
+window.addEventListener('load', () => {
+  initToken();
+
+  if (!getToken()) {
+    showNoAccess();
+    return;
+  }
+
+  const theme = localStorage.getItem('theme') || 'light';
+  if (theme === 'dark') {
+    document.body.classList.add('dark');
+  }
+  document.getElementById('theme-toggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => chip.classList.toggle('selected'));
+  });
 });
 
+// ── TEMA ──
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  document.getElementById('theme-toggle').textContent = isDark ? '☀️' : '🌙';
+}
+
+// ── NAVIGASJON ──
 function switchTab(name, el) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -694,34 +745,6 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-function saveKey() {
-  const key = document.getElementById('api-key').value.trim();
-  if (!key.startsWith('sk-')) { showToast('⚠️ Ugyldig nøkkel – må starte med sk-'); return; }
-  localStorage.setItem('claude_key', key);
-  showToast('✅ Nøkkel lagret!');
-}
-function clearKey() {
-  localStorage.removeItem('claude_key');
-  document.getElementById('api-key').value = '';
-  showToast('🗑 Nøkkel slettet');
-}
-window.addEventListener('load', () => {
-  const k = localStorage.getItem('claude_key');
-  if (k) document.getElementById('api-key').value = k;
-
-  const theme = localStorage.getItem('theme') || 'light';
-  if (theme === 'dark') {
-    document.body.classList.add('dark');
-    document.getElementById('theme-toggle').textContent = '☀️';
-  }
-});
-
-function toggleTheme() {
-  const isDark = document.body.classList.toggle('dark');
-  localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  document.getElementById('theme-toggle').textContent = isDark ? '☀️' : '🌙';
-}
-
 function getCriteria() {
   return {
     persons: document.getElementById('persons').value,
@@ -734,16 +757,16 @@ function getCriteria() {
   };
 }
 
+// ── API-KALL VIA VERCEL-PROXY ──
 async function callClaude(prompt, maxTokens = 1000) {
-  const apiKey = localStorage.getItem('claude_key');
-  if (!apiKey) throw new Error('Ingen API-nøkkel');
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const token = getToken();
+  if (!token) throw new Error('Ingen token');
+
+  const res = await fetch(BACKEND_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
+      'x-user-token': token
     },
     body: JSON.stringify({
       model: 'claude-opus-4-6',
@@ -751,16 +774,15 @@ async function callClaude(prompt, maxTokens = 1000) {
       messages: [{ role: 'user', content: prompt }]
     })
   });
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.error?.message || 'API-feil');
   const text = data.content[0].text;
   return JSON.parse(text.replace(/```json|```/g, '').trim());
 }
 
+// ── GENERER UKEMENY ──
 async function generateMeals() {
-  const apiKey = localStorage.getItem('claude_key');
-  if (!apiKey) { showToast('⚠️ Legg inn API-nøkkel under «Nøkkel»'); return; }
-
   const c = getCriteria();
   document.getElementById('error-msg').classList.remove('show');
 
@@ -822,6 +844,7 @@ Svar KUN med et JSON-objekt i dette eksakte formatet (ingen forklaringstekst):
   }
 }
 
+// ── BYTT MIDDAG ──
 async function swapMeal(index) {
   const meal = currentMeals[index];
   const c = getCriteria();
@@ -864,6 +887,7 @@ Svar KUN med et JSON-objekt:
   }
 }
 
+// ── OPPSKRIFT ──
 async function toggleRecipe(index) {
   const panel = document.getElementById(`recipe-panel-${index}`);
   const btn = document.getElementById(`recipe-btn-${index}`);
@@ -942,6 +966,7 @@ Svar KUN med et JSON-objekt i dette eksakte formatet (ingen forklaringstekst):
   }
 }
 
+// ── FJERN DAG ──
 function removeMeal(index) {
   const dayName = currentMeals[index].day;
   currentMeals.splice(index, 1);
@@ -950,6 +975,7 @@ function removeMeal(index) {
   showToast(`🗑 ${dayName} fjernet`);
 }
 
+// ── OPPDATER DAG-KORT ──
 function updateDayCard(index, meal) {
   const card = document.getElementById(`day-card-${index}`);
   if (!card) return;
@@ -971,6 +997,7 @@ function updateDayCard(index, meal) {
   recipeBtn.innerHTML = '📖 Oppskrift';
 }
 
+// ── RENDER UKEPLAN ──
 function renderWeek(meals) {
   document.getElementById('loading').classList.remove('show');
   const container = document.getElementById('week-content');
@@ -1017,6 +1044,7 @@ function renderWeek(meals) {
   showToast('✅ Ukemeny generert!');
 }
 
+// ── RENDER HANDLELISTE ──
 function renderShopList(list) {
   const container = document.getElementById('shop-content');
   const cats = Object.entries(list).filter(([_, items]) => items.length > 0);
